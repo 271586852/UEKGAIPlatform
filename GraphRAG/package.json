@@ -1,0 +1,20 @@
+{
+  "name": "graphrag-monorepo",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "supabase/functions/*"
+  ],
+  "devDependencies": {
+    "supabase": "^1.110.1"
+  },
+  "dependencies": {
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/auth-ui-react": "^0.4.7",
+    "@types/d3": "^7.4.3",
+    "antd": "^5.26.7",
+    "d3": "^7.9.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  }
+}
