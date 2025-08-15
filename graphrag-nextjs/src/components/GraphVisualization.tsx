@@ -69,10 +69,6 @@ export default function GraphVisualization({
         linkedByIndex.get(targetId)!.add(sourceId);
     });
 
-    const isConnected = (a: GraphNode, b: GraphNode) => {
-        return linkedByIndex.get(a.id)?.has(b.id) || a.id === b.id;
-    }
-
     const simulationNodes: SimulationNode[] = graphData.nodes.map(n => ({...n}));
     const simulationLinks = graphData.links.map(l => ({...l}));
 
@@ -127,10 +123,6 @@ export default function GraphVisualization({
         .text(d => d.label)
         .attr('x', 12)
         .attr('y', 5);
-        
-    node.style('opacity', n => hoveredNode ? (isConnected(n, hoveredNode) ? 1 : 0.2) : 1);
-    labels.style('opacity', l => hoveredNode ? (isConnected(l, hoveredNode) ? 1 : 0.2) : 1);
-    link.style('opacity', o => hoveredNode ? (isConnected(o.source as SimulationNode, hoveredNode) && isConnected(o.target as SimulationNode, hoveredNode) ? 1 : 0.2) : 0.6);
 
     simulation.on("tick", () => {
       link
@@ -148,7 +140,47 @@ export default function GraphVisualization({
         .attr("y", d => d.y! + 5);
     });
 
-  }, [graphData, layout, isAggregated, hoveredNode]);
+  }, [graphData, layout, isAggregated]);
+
+  // Separate useEffect for hover effects to avoid re-rendering the entire graph
+  useEffect(() => {
+    if (!svgRef.current) return;
+    
+    const svg = d3.select(svgRef.current);
+    const nodes = svg.selectAll('.nodes circle');
+    const labels = svg.selectAll('.labels text');
+    const links = svg.selectAll('.links line');
+
+    if (hoveredNode) {
+      // Create a map for connected nodes for efficient lookup
+      const linkedByIndex = new Map<string, Set<string>>();
+      graphData.links.forEach(link => {
+        const sourceId = (link.source as GraphNode).id ?? link.source as string;
+        const targetId = (link.target as GraphNode).id ?? link.target as string;
+        if (!linkedByIndex.has(sourceId)) linkedByIndex.set(sourceId, new Set());
+        if (!linkedByIndex.has(targetId)) linkedByIndex.set(targetId, new Set());
+        linkedByIndex.get(sourceId)!.add(targetId);
+        linkedByIndex.get(targetId)!.add(sourceId);
+      });
+
+      const isConnected = (a: GraphNode, b: GraphNode) => {
+        return linkedByIndex.get(a.id)?.has(b.id) || a.id === b.id;
+      };
+
+      nodes.style('opacity', (n: any) => isConnected(n, hoveredNode) ? 1 : 0.2);
+      labels.style('opacity', (l: any) => isConnected(l, hoveredNode) ? 1 : 0.2);
+      links.style('opacity', (o: any) => {
+        const source = o.source as SimulationNode;
+        const target = o.target as SimulationNode;
+        return isConnected(source, hoveredNode) && isConnected(target, hoveredNode) ? 1 : 0.2;
+      });
+    } else {
+      // Reset all opacities when no node is hovered
+      nodes.style('opacity', 1);
+      labels.style('opacity', 1);
+      links.style('opacity', 0.6);
+    }
+  }, [hoveredNode, graphData.links]);
 
   const handleTrace = async (direction: 'UPSTREAM' | 'DOWNSTREAM') => {
     if (!contextMenu) return;
@@ -162,9 +194,9 @@ export default function GraphVisualization({
       if (data && data.nodes && data.links) {
         setGraphData(data);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to trace graph:', err);
-      setError(`Failed to trace graph: ${err.message}`);
+      setError(`Failed to trace graph: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setIsLoading(false);
       setContextMenu(null);
