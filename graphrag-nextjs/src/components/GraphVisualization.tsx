@@ -228,7 +228,7 @@ export default function GraphVisualization({
   };
 
   return (
-    <div className="graph-container">
+    <div className="graph-container" onClick={() => setContextMenu(null)}>
       <svg ref={svgRef}></svg>
       {contextMenu && (
         <ContextMenu

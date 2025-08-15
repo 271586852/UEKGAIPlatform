@@ -24,11 +24,15 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ node, x, y, onClose, onTrace 
   };
 
   return (
-    <div className="context-menu" style={{ top: y, left: x }}>
+    <div 
+      className="context-menu" 
+      style={{ top: y, left: x }}
+      onClick={(e) => e.stopPropagation()}
+    >
       <ul>
-        <li onClick={handleTraceUpstream}>Trace Upstream</li>
-        <li onClick={handleTraceDownstream}>Trace Downstream</li>
-        <li onClick={onClose}>Close</li>
+        <li onClick={handleTraceUpstream}>追踪上游</li>
+        <li onClick={handleTraceDownstream}>追踪下游</li>
+        <li onClick={onClose}>关闭</li>
       </ul>
     </div>
   );
