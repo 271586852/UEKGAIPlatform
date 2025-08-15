@@ -126,18 +126,6 @@ serve(async (req) => {
       { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
     );
     
-    const { data: documents, error } = await supabaseClient
-      .from('ue_documents')
-      .select('content');
-
-    if (error) {
-      throw new Error(`Failed to fetch documents: ${error.message}`);
-    }
-
-    // Combine the content of all documents into a single context string
-    const context = documents?.map(d => d.content).join('\n---\n') || '';
-
-
     const { query, sessionId } = await req.json()
     if (!query || !sessionId) {
       throw new Error("Missing 'query' or 'sessionId' in the request body.")
@@ -151,6 +139,52 @@ serve(async (req) => {
       apiKey: openaiApiKey,
       baseURL: "https://api.moonshot.cn/v1",
     })
+
+    // Get relevant documents using semantic search
+    let documents;
+    try {
+      // Generate embedding for user query
+      const embeddingResponse = await kimi.embeddings.create({
+        input: query,
+        model: "text-embedding-3-small"
+      });
+      const queryEmbedding = embeddingResponse.data[0].embedding;
+
+      // Use semantic search to find relevant documents
+      const { data: searchResults, error: searchError } = await supabaseClient
+        .rpc('match_documents', {
+          query_embedding: queryEmbedding,
+          match_threshold: 0.7,
+          match_count: 8
+        });
+
+      if (searchError) {
+        throw new Error(`Semantic search failed: ${searchError.message}`);
+      }
+
+      documents = searchResults;
+    } catch (embeddingError) {
+      console.warn('Semantic search failed, falling back to limited query:', embeddingError);
+      // Fallback to limited query if semantic search fails
+      const { data: fallbackDocs, error } = await supabaseClient
+        .from('ue_documents')
+        .select('content')
+        .limit(10);
+
+      if (error) {
+        throw new Error(`Failed to fetch documents: ${error.message}`);
+      }
+      documents = fallbackDocs;
+    }
+
+    // Combine the content of relevant documents and truncate if needed
+    let context = documents?.map((d: any) => d.content).join('\n---\n') || '';
+    
+    // Truncate context if it's too long (roughly 6000 tokens = ~24000 characters)
+    const maxContextLength = 24000;
+    if (context.length > maxContextLength) {
+      context = context.substring(0, maxContextLength) + '\n\n[上下文已截断...]';
+    }
 
     // Persist user's message
     const { error: userError } = await supabaseClient.from("chat_history").insert({
