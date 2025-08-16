@@ -38,6 +38,8 @@ export default function GraphVisualization({
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [contextMenu, setContextMenu] = useState<{ node: GraphNode; x: number; y: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const isDraggingRef = useRef(false); // Use ref for synchronous access in event handlers
 
   // D3 rendering effect
   useEffect(() => {
@@ -109,8 +111,16 @@ export default function GraphVisualization({
             setContextMenu({ node: d, x: event.pageX, y: event.pageY });
             event.stopPropagation();
         })
-        .on('mouseover', (_event, d) => setHoveredNode(d))
-        .on('mouseout', () => setHoveredNode(null))
+        .on('mouseover', (_event, d) => {
+          if (!isDraggingRef.current) {
+            setHoveredNode(d);
+          }
+        })
+        .on('mouseout', () => {
+          if (!isDraggingRef.current) {
+            setHoveredNode(null);
+          }
+        })
         .call(drag(simulation) as any);
         
     node.append("title").text(d => d.label);
@@ -208,6 +218,8 @@ export default function GraphVisualization({
       if (!event.active) simulation.alphaTarget(0.3).restart();
       event.subject.fx = event.subject.x;
       event.subject.fy = event.subject.y;
+      isDraggingRef.current = true;
+      setIsDragging(true);
     }
 
     function dragged(event: d3.D3DragEvent<Element, SimulationNode, SimulationNode>) {
@@ -219,6 +231,9 @@ export default function GraphVisualization({
       if (!event.active) simulation.alphaTarget(0);
       event.subject.fx = null;
       event.subject.fy = null;
+      isDraggingRef.current = false;
+      setIsDragging(false);
+      setHoveredNode(null); // Explicitly clear hovered node on drag end
     }
 
     return d3.drag<SVGCircleElement, SimulationNode>()
