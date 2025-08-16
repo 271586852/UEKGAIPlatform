@@ -29,6 +29,8 @@ function processRecords(records: any[]) {
                 nodes.set(startNode.identity.toString(), {
                     id: startNode.identity.toString(),
                     label: startNode.properties.name || startNode.labels[0],
+                    group: startNode.labels[0], // Add group property for coloring
+                    type: startNode.labels[0],
                     ...startNode.properties
                 });
             }
@@ -36,6 +38,8 @@ function processRecords(records: any[]) {
                 nodes.set(endNode.identity.toString(), {
                     id: endNode.identity.toString(),
                     label: endNode.properties.name || endNode.labels[0],
+                    group: endNode.labels[0], // Add group property for coloring
+                    type: endNode.labels[0],
                     ...endNode.properties
                 });
             }
@@ -63,14 +67,20 @@ serve(async (req) => {
       throw new Error("Missing nodeId or direction");
     }
 
-    const query = direction === 'UPSTREAM'
-      ? `MATCH p=(downstream)-[:DEPENDS_ON*1..10]->(upstream) WHERE id(upstream) = ${nodeId} RETURN p`
-      : `MATCH p=(downstream)-[:DEPENDS_ON*1..10]->(upstream) WHERE id(downstream) = ${nodeId} RETURN p`;
+    if (!['UPSTREAM', 'DOWNSTREAM'].includes(direction)) {
+      throw new Error("Direction must be 'UPSTREAM' or 'DOWNSTREAM'");
+    }
 
-    const session = driver.session();
+    console.log(`Tracing ${direction} for node: ${nodeId}`);
+
+    const query = direction === 'UPSTREAM'
+      ? `MATCH p=(downstream)-[:DEPENDS_ON]->(upstream) WHERE id(upstream) = toInteger($nodeId) RETURN p`
+      : `MATCH p=(downstream)-[:DEPENDS_ON]->(upstream) WHERE id(downstream) = toInteger($nodeId) RETURN p`;
+    
+    const session = driver.session({ database: Deno.env.get("NEO4J_DATABASE") });
     let graphData;
     try {
-      const result = await session.run(query);
+      const result = await session.run(query, { nodeId });
       graphData = processRecords(result.records);
     } finally {
       await session.close();
