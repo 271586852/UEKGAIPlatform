@@ -35,6 +35,7 @@ export default function GraphVisualization({
   setError,
 }: GraphVisualizationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null); // Ref for the container div
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [contextMenu, setContextMenu] = useState<{ node: GraphNode; x: number; y: number } | null>(null);
@@ -108,7 +109,17 @@ export default function GraphVisualization({
         })
         .on('contextmenu', (event, d) => {
             event.preventDefault();
-            setContextMenu({ node: d, x: event.pageX, y: event.pageY });
+            if (containerRef.current) {
+              const containerRect = containerRef.current.getBoundingClientRect();
+              setContextMenu({ 
+                node: d, 
+                x: event.clientX - containerRect.left, 
+                y: event.clientY - containerRect.top 
+              });
+            } else {
+              // Fallback for safety
+              setContextMenu({ node: d, x: event.clientX, y: event.clientY });
+            }
             event.stopPropagation();
         })
         .on('mouseover', (_event, d) => {
@@ -243,7 +254,7 @@ export default function GraphVisualization({
   };
 
   return (
-    <div className="graph-container" onClick={() => setContextMenu(null)}>
+    <div className="graph-container" ref={containerRef} onClick={() => setContextMenu(null)}>
       <svg ref={svgRef}></svg>
       {contextMenu && (
         <ContextMenu
