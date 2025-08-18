@@ -105,3 +105,117 @@ main {
 .reset-btn:hover {
   background-color: #ffffff;
 }
+
+/* Chat History Sidebar Styles */
+.chat-history-sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  height: 100vh;
+  position: fixed; /* Fix it to the viewport */
+  top: 0;
+  left: 0;
+  background-color: #202123;
+  border-right: 1px solid #363739;
+  color: #ececec;
+  padding: 10px;
+  box-sizing: border-box;
+  z-index: 1000;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #363739;
+}
+
+.sidebar-header h2 {
+  font-size: 1.1em;
+  margin: 0;
+}
+
+.new-chat-btn {
+  background-color: #343541;
+  color: #ececec;
+  border: 1px solid #565869;
+  border-radius: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.2s;
+}
+
+.new-chat-btn:hover {
+  background-color: #4a4b5a;
+}
+
+.session-list {
+  flex-grow: 1;
+  overflow-y: auto;
+  margin-top: 10px;
+}
+
+.session-item {
+  padding: 12px 10px;
+  margin-bottom: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border: 1px solid transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.session-details {
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.session-item:hover {
+  background-color: #2a2b2e;
+}
+
+.session-item.active {
+  background-color: #343541;
+  border-color: #565869;
+}
+
+.session-title {
+  margin: 0 0 5px 0;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-timestamp {
+  margin: 0;
+  font-size: 0.8em;
+  color: #8e8ea0;
+}
+
+.delete-session-btn {
+  background: none;
+  border: none;
+  color: #8e8ea0;
+  cursor: pointer;
+  font-size: 1.2em;
+  padding: 5px;
+  border-radius: 50%;
+  transition: background-color 0.2s, color 0.2s, opacity 0.2s;
+  visibility: hidden;
+  opacity: 0;
+}
+
+.session-item:hover .delete-session-btn {
+  visibility: visible;
+  opacity: 1;
+}
+
+.delete-session-btn:hover {
+  background-color: #343541;
+  color: #ececec;
+}
