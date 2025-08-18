@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { GraphData } from '@/types';
 import './Chatbot.css';
+import Typewriter from './Typewriter';
 
 interface ChatbotProps {
   supabase: SupabaseClient;
@@ -100,10 +101,10 @@ export default function Chatbot({ supabase, setGraphData, activeSessionId, onNew
         const chunk = decoder.decode(value, { stream: true });
         setMessages(prev => {
           const lastMessage = prev[prev.length - 1];
-          if (lastMessage.role === 'assistant') {
-            lastMessage.content += chunk;
+          if (lastMessage && lastMessage.role === 'assistant') {
+            return [...prev.slice(0, -1), { ...lastMessage, content: lastMessage.content + chunk }];
           }
-          return [...prev];
+          return prev;
         });
       }
     } catch (err: any) {
@@ -127,8 +128,14 @@ export default function Chatbot({ supabase, setGraphData, activeSessionId, onNew
     <div className="chatbot-container">
       <div className="chat-messages">
         {messages.map((msg, index) => (
-          <div key={index} className={`message ${msg.role}`}>
-            {msg.content}
+          <div key={index} className={`message-container ${msg.role}`}>
+            <div className={`message ${msg.role}`}>
+              {msg.role === 'assistant' ? (
+                <Typewriter text={msg.content} />
+              ) : (
+                msg.content
+              )}
+            </div>
           </div>
         ))}
         <div ref={messagesEndRef} />
