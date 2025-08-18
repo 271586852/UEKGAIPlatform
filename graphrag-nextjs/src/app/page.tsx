@@ -11,7 +11,6 @@ import Sidebar from '@/components/Sidebar';
 import { GraphData } from '@/types';
 import './globals.css';
 
-import '@/components/ChatHistorySidebar.css';
 import '@/components/GraphVisualization.css';
 import '@/components/Chatbot.css';
 
@@ -79,6 +78,28 @@ const App = () => {
     setChatListVersion(v => v + 1);
   };
 
+  const handleDeleteSession = async (sessionId: string) => {
+    try {
+      const { error } = await supabase.functions.invoke('delete-chat-history', {
+        body: { session_id: sessionId },
+      });
+      if (error) throw error;
+      
+      // Remove the session from the local state to update the UI
+      // setSessions(prevSessions => prevSessions.filter(s => s.session_id !== sessionId)); // This line was removed as per the new_code, as sessions state was not defined.
+      
+      // If the deleted session was the active one, start a new chat
+      if (activeSessionId === sessionId) {
+        setActiveSessionId(null); // Or trigger a proper new chat flow
+      }
+      // Force a refresh of the chat list by updating the version tracker
+      setChatListVersion(v => v + 1);
+    } catch (err: any) {
+      console.error('Failed to delete session:', err);
+      setError(`Failed to delete session: ${err.message}`);
+    }
+  };
+
   if (!session) {
     return (
       <div style={{ width: '100vw', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -101,6 +122,7 @@ const App = () => {
         activeSessionId={activeSessionId} 
         setActiveSessionId={setActiveSessionId}
         chatListVersion={chatListVersion}
+        onDeleteSession={handleDeleteSession} // Pass the handler to Sidebar
       />
       <div className="app-main-content">
         <header className="App-header">

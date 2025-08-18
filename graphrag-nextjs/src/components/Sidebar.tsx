@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { ChatSession } from '@/types';
-import './ChatHistorySidebar.css'; 
 
 interface SidebarProps {
   supabase: SupabaseClient;
@@ -11,9 +10,16 @@ interface SidebarProps {
   setActiveSessionId: (sessionId: string | null) => void;
   // This version number will be incremented by the parent to trigger a refetch
   chatListVersion: number; 
+  onDeleteSession: (sessionId: string) => void; // Add this
 }
 
-export default function Sidebar({ supabase, activeSessionId, setActiveSessionId, chatListVersion }: SidebarProps) {
+export default function Sidebar({
+  supabase,
+  activeSessionId,
+  setActiveSessionId,
+  chatListVersion,
+  onDeleteSession, // Add this
+}: SidebarProps) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,6 +51,13 @@ export default function Sidebar({ supabase, activeSessionId, setActiveSessionId,
     setActiveSessionId(null);
   };
 
+  const handleDelete = (e: React.MouseEvent, sessionId: string) => {
+    e.stopPropagation(); // Prevent session click event from firing
+    if (window.confirm('Are you sure you want to delete this chat session?')) {
+      onDeleteSession(sessionId);
+    }
+  };
+
   return (
     <div className="chat-history-sidebar">
       <div className="sidebar-header">
@@ -61,10 +74,18 @@ export default function Sidebar({ supabase, activeSessionId, setActiveSessionId,
             className={`session-item ${session.session_id === activeSessionId ? 'active' : ''}`}
             onClick={() => setActiveSessionId(session.session_id)}
           >
-            <p className="session-title">{session.first_message}</p>
-            <p className="session-timestamp">
-              {new Date(session.last_updated).toLocaleString()}
-            </p>
+            <div className="session-details">
+              <p className="session-title">{session.first_message}</p>
+              <p className="session-timestamp">
+                {new Date(session.last_updated).toLocaleString()}
+              </p>
+            </div>
+            <button 
+              className="delete-session-btn"
+              onClick={(e) => handleDelete(e, session.session_id)}
+            >
+              🗑️
+            </button>
           </div>
         ))}
       </div>
