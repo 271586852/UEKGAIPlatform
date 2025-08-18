@@ -55,6 +55,19 @@ export default function GraphVisualization({
 
     svg.selectAll('*').remove(); // Clear SVG for re-rendering
 
+    // Define arrow markers for directed links
+    svg.append('defs').append('marker')
+        .attr('id', 'arrowhead')
+        .attr('viewBox', '-0 -5 10 10')
+        .attr('refX', 19) // Controls the distance of the arrowhead from the node
+        .attr('refY', 0)
+        .attr('orient', 'auto')
+        .attr('markerWidth', 6)
+        .attr('markerHeight', 6)
+        .append('path')
+        .attr('d', 'M0,-5L10,0L0,5')
+        .attr('fill', '#999');
+
     const width = container.clientWidth;
     const height = container.clientHeight;
     
@@ -94,7 +107,8 @@ export default function GraphVisualization({
         .attr('class', 'links')
         .selectAll("line")
         .data(simulationLinks)
-        .join("line");
+        .join("line")
+        .attr('marker-end', 'url(#arrowhead)'); // Apply the arrowhead to each link
 
     const node = svg.append("g")
         .attr('class', 'nodes')
@@ -145,12 +159,29 @@ export default function GraphVisualization({
         .attr('x', 12)
         .attr('y', 5);
 
+    const nodeRadius = 10;
+
     simulation.on("tick", () => {
-      link
-        .attr("x1", d => (d.source as SimulationNode).x!)
-        .attr("y1", d => (d.source as SimulationNode).y!)
-        .attr("x2", d => (d.target as SimulationNode).x!)
-        .attr("y2", d => (d.target as SimulationNode).y!);
+      link.each(function(d) {
+        const source = d.source as SimulationNode;
+        const target = d.target as SimulationNode;
+
+        const dx = target.x! - source.x!;
+        const dy = target.y! - source.y!;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Avoid division by zero
+        if (distance === 0) return;
+
+        const newTargetX = target.x! - (dx / distance) * nodeRadius;
+        const newTargetY = target.y! - (dy / distance) * nodeRadius;
+        
+        d3.select(this)
+          .attr("x1", source.x!)
+          .attr("y1", source.y!)
+          .attr("x2", newTargetX)
+          .attr("y2", newTargetY);
+      });
 
       node
         .attr("cx", d => d.x!)
