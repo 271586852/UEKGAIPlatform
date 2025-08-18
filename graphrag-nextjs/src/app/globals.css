@@ -29,6 +29,7 @@ body {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  margin-left: 280px; /* Add this to offset the sidebar */
 }
 
 .main-content {

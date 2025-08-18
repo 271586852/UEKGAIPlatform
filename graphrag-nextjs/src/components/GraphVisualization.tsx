@@ -18,8 +18,7 @@ interface GraphVisualizationProps {
   graphData: GraphData;
   setGraphData: React.Dispatch<React.SetStateAction<GraphData>>;
   activeSessionId: string | null;
-  layout: 'force' | 'radial';
-  isAggregated: boolean;
+  fetchInitialData: () => void;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setError: React.Dispatch<React.SetStateAction<string | null>>;
 }
@@ -29,8 +28,7 @@ export default function GraphVisualization({
   graphData,
   setGraphData,
   activeSessionId,
-  layout,
-  isAggregated,
+  fetchInitialData,
   setIsLoading,
   setError,
 }: GraphVisualizationProps) {
@@ -42,21 +40,55 @@ export default function GraphVisualization({
   const [isDragging, setIsDragging] = useState(false);
   const isDraggingRef = useRef(false); // Use ref for synchronous access in event handlers
 
+  const [layout, setLayout] = useState<'force' | 'radial'>('force');
+  const [isAggregated, setIsAggregated] = useState(false);
+
   // D3 rendering effect
   useEffect(() => {
     if (!svgRef.current || !graphData.nodes.length) {
       d3.select(svgRef.current).selectAll('*').remove();
       return;
     }
-
-    const svg = d3.select(svgRef.current);
-    const container = svg.node()?.parentElement;
+  
+    const container = containerRef.current;
     if (!container) return;
+  
+    const svg = d3.select(svgRef.current);
+  
+    const resizeObserver = new ResizeObserver(entries => {
+      for (let entry of entries) {
+        const { width, height } = entry.contentRect;
+        svg.attr('width', width).attr('height', height);
+        // Recenter the simulation
+        const simulation = d3.forceSimulation()
+          .force('center', d3.forceCenter(width / 2, height / 2));
+        simulation.restart();
+      }
+    });
+  
+    if (container) {
+      resizeObserver.observe(container);
+    }
 
     svg.selectAll('*').remove(); // Clear SVG for re-rendering
+    
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
+    const zoom = d3.zoom<SVGSVGElement, unknown>()
+        .scaleExtent([0.1, 8]) // Zoom range from 10% to 800%
+        .on('zoom', (event) => {
+            g.attr('transform', event.transform);
+        });
+
+    svg.attr('width', width).attr('height', height)
+       .attr('viewBox', [0, 0, width, height])
+       .call(zoom);
+
+    const g = svg.append("g");
 
     // Define arrow markers for directed links
-    svg.append('defs').append('marker')
+    g.append('defs').append('marker')
         .attr('id', 'arrowhead')
         .attr('viewBox', '-0 -5 10 10')
         .attr('refX', 19) // Controls the distance of the arrowhead from the node
@@ -67,11 +99,6 @@ export default function GraphVisualization({
         .append('path')
         .attr('d', 'M0,-5L10,0L0,5')
         .attr('fill', '#999');
-
-    const width = container.clientWidth;
-    const height = container.clientHeight;
-    
-    svg.attr('width', width).attr('height', height).attr('viewBox', [-width / 2, -height / 2, width, height]);
 
     const color = d3.scaleOrdinal(d3.schemeCategory10);
 
@@ -100,17 +127,17 @@ export default function GraphVisualization({
     } else {
       simulation
         .force('r', null)
-        .force('center', d3.forceCenter(0, 0));
+        .force('center', d3.forceCenter(width / 2, height / 2));
     }
 
-    const link = svg.append("g")
+    const link = g.append("g")
         .attr('class', 'links')
         .selectAll("line")
         .data(simulationLinks)
         .join("line")
         .attr('marker-end', 'url(#arrowhead)'); // Apply the arrowhead to each link
 
-    const node = svg.append("g")
+    const node = g.append("g")
         .attr('class', 'nodes')
         .selectAll("circle")
         .data(simulationNodes)
@@ -150,7 +177,7 @@ export default function GraphVisualization({
         
     node.append("title").text(d => d.label);
 
-    const labels = svg.append("g")
+    const labels = g.append("g")
         .attr('class', 'labels')
         .selectAll("text")
         .data(simulationNodes)
@@ -192,6 +219,11 @@ export default function GraphVisualization({
         .attr("y", d => d.y! + 5);
     });
 
+    return () => {
+      if (container) {
+        resizeObserver.unobserve(container);
+      }
+    };
   }, [graphData, layout, isAggregated]);
 
   // Separate useEffect for hover effects to avoid re-rendering the entire graph
@@ -286,6 +318,14 @@ export default function GraphVisualization({
 
   return (
     <div className="graph-container" ref={containerRef} onClick={() => setContextMenu(null)}>
+      <div className="graph-controls">
+        <button onClick={() => setLayout('force')} disabled={layout === 'force'}>Force</button>
+        <button onClick={() => setLayout('radial')} disabled={layout === 'radial'}>Radial</button>
+        <button onClick={() => setIsAggregated(!isAggregated)}>
+          {isAggregated ? 'Ungroup' : 'Group by Label'}
+        </button>
+        <button onClick={fetchInitialData}>Reset View</button>
+      </div>
       <svg ref={svgRef}></svg>
       {contextMenu && (
         <ContextMenu

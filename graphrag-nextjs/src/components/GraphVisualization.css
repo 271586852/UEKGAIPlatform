@@ -5,6 +5,39 @@
   overflow: hidden; /* Hide anything that goes outside the boundaries */
 }
 
+.graph-controls {
+  position: absolute;
+  bottom: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  gap: 10px;
+}
+
+.graph-controls button {
+  background-color: #343541;
+  color: #ececec;
+  border: 1px solid #565869;
+  border-radius: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.graph-controls button:hover:not(:disabled) {
+  background-color: #4a4b5a;
+  border-color: #6a6b7a;
+}
+
+.graph-controls button:disabled {
+  background-color: #2a2b2e;
+  color: #8e8ea0;
+  cursor: not-allowed;
+  border-color: #3e3f4b;
+}
+
 .graph-container svg {
   display: block;
   width: 100%;
@@ -17,15 +50,16 @@
 }
 
 .links line {
-  stroke: #999;
-  stroke-opacity: 0.6;
+  stroke: #565869;
+  stroke-opacity: 0.8;
 }
 
 .labels text {
-  font-family: sans-serif;
-  font-size: 10px;
-  fill: #fff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 12px;
+  fill: #ececec;
   pointer-events: none; /* Make text non-interactive */
+  text-shadow: 0 0 3px #000, 0 0 3px #000; /* Add a shadow to make text more readable */
 }
 
 .loading-message, .error-message {
