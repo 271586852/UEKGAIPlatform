@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { GraphData } from '@/types';
 import './Chatbot.css';
-import Typewriter from './Typewriter';
+import ThinkingIndicator from './ThinkingIndicator';
 
 interface ChatbotProps {
   supabase: SupabaseClient;
@@ -95,22 +95,34 @@ export default function Chatbot({ supabase, setGraphData, activeSessionId, onNew
       setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
+      const typingSpeed = 20; // ms per character
+
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
-        setMessages(prev => {
-          const lastMessage = prev[prev.length - 1];
-          if (lastMessage && lastMessage.role === 'assistant') {
-            return [...prev.slice(0, -1), { ...lastMessage, content: lastMessage.content + chunk }];
-          }
-          return prev;
-        });
+        
+        for (const char of chunk) {
+            setMessages(prev => {
+              const lastMessage = prev[prev.length - 1];
+              if (lastMessage && lastMessage.role === 'assistant') {
+                return [...prev.slice(0, -1), { ...lastMessage, content: lastMessage.content + char }];
+              }
+              return prev;
+            });
+            await new Promise(resolve => setTimeout(resolve, typingSpeed));
+        }
       }
     } catch (err: any) {
       console.error('Error during chat submission:', err);
       const errorMessage: Message = { role: 'assistant', content: `Sorry, I encountered an error: ${err.message}` };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => {
+        if (prev.length > 0 && prev[prev.length - 1].role === 'assistant') {
+          const newMessages = [...prev.slice(0, -1), errorMessage];
+          return newMessages;
+        }
+        return [...prev, errorMessage];
+      });
     } finally {
       setIsLoading(false);
     }
@@ -130,14 +142,17 @@ export default function Chatbot({ supabase, setGraphData, activeSessionId, onNew
         {messages.map((msg, index) => (
           <div key={index} className={`message-container ${msg.role}`}>
             <div className={`message ${msg.role}`}>
-              {msg.role === 'assistant' ? (
-                <Typewriter text={msg.content} />
-              ) : (
-                msg.content
-              )}
+              {msg.content}
             </div>
           </div>
         ))}
+        {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
+          <div className="message-container assistant">
+            <div className="message assistant">
+              <ThinkingIndicator />
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
       <form onSubmit={handleSubmit} className="chatbot-form">
