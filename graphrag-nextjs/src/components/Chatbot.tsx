@@ -68,6 +68,14 @@ export default function Chatbot({ supabase, setGraphData, activeSessionId, onNew
     const sessionIdForRequest = activeSessionId || crypto.randomUUID();
 
     try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error('Your session has expired. Please refresh the page.');
+      }
+      
       // Use fetch directly to handle the streaming response
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/rag-query`,
@@ -75,7 +83,7 @@ export default function Chatbot({ supabase, setGraphData, activeSessionId, onNew
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token}`,
+            'Authorization': `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({ query: currentInput, sessionId: sessionIdForRequest }),
         }
@@ -127,14 +135,6 @@ export default function Chatbot({ supabase, setGraphData, activeSessionId, onNew
       setIsLoading(false);
     }
   };
-  
-  // Need to get session for the Authorization header
-  const [session, setSession] = useState<any>(null);
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-    })
-  }, [supabase]);
 
   return (
     <div className="chatbot-container">
