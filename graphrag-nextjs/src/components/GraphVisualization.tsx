@@ -6,6 +6,7 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { GraphData, GraphNode, GraphLink } from '@/types';
 import ContextMenu from './ContextMenu';
 import './GraphVisualization.css';
+import CypherGenerator from './CypherGenerator'; // Import the new component
 
 // Define the shape of d3's simulation node, which includes x, y coordinates
 interface SimulationNode extends GraphNode {
@@ -21,6 +22,8 @@ interface GraphVisualizationProps {
   fetchInitialData: () => void;
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setError: React.Dispatch<React.SetStateAction<string | null>>;
+  cypherQuery: string;
+  setCypherQuery: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export default function GraphVisualization({
@@ -31,6 +34,8 @@ export default function GraphVisualization({
   fetchInitialData,
   setIsLoading,
   setError,
+  cypherQuery,
+  setCypherQuery,
 }: GraphVisualizationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null); // Ref for the container div
@@ -42,7 +47,6 @@ export default function GraphVisualization({
 
   const [layout, setLayout] = useState<'force' | 'radial'>('force');
   const [isAggregated, setIsAggregated] = useState(false);
-  const [cypherQuery, setCypherQuery] = useState('MATCH (n)-[r]->(m) RETURN n, r, m LIMIT 25');
 
   // D3 rendering effect
   useEffect(() => {
@@ -267,6 +271,30 @@ export default function GraphVisualization({
     }
   }, [hoveredNode, graphData.links]);
 
+  const handleExecuteQuery = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('execute-cypher-query', {
+        body: { query: cypherQuery },
+      });
+      if (error) throw error;
+      if (data && data.nodes && data.links) {
+        setGraphData(data);
+      } else {
+        // Handle cases where the query runs but returns no graph (e.g., a query returning a list of names)
+        // You might want to display this data in a different way.
+        console.log('Query executed, but did not return graph data:', data);
+        setGraphData({ nodes: [], links: [] }); // Clear the graph
+      }
+    } catch (err: unknown) {
+      console.error('Failed to execute Cypher query:', err);
+      setError(`Failed to execute query: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleTrace = async (direction: 'UPSTREAM' | 'DOWNSTREAM') => {
     if (!contextMenu) return;
     setIsLoading(true);
@@ -285,31 +313,6 @@ export default function GraphVisualization({
     } finally {
       setIsLoading(false);
       setContextMenu(null);
-    }
-  };
-
-  const handleQuerySubmit = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const { data, error: funcError } = await supabase.functions.invoke('execute-cypher-query', {
-        body: { query: cypherQuery },
-      });
-
-      if (funcError) throw funcError;
-
-      if (data && data.nodes && data.links) {
-        setGraphData(data);
-      } else {
-        // Even if there are no results, we should clear the graph
-        setGraphData({ nodes: [], links: [] });
-        if (!data) throw new Error("Invalid data structure received from query.");
-      }
-    } catch (err: any) {
-      console.error("Failed to execute Cypher query:", err);
-      setError(`Query failed: ${err.message}`);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -342,28 +345,39 @@ export default function GraphVisualization({
       .on("end", dragended);
   };
 
+  // Expose layout controls to the parent component
+  useEffect(() => {
+    const forceBtn = document.querySelector('.graph-controls button:nth-child(1)');
+    const radialBtn = document.querySelector('.graph-controls button:nth-child(2)');
+    const groupBtn = document.querySelector('.graph-controls button:nth-child(3)');
+    const resetBtn = document.querySelector('.graph-controls button:nth-child(4)');
+    const executeBtn = document.querySelector('.cypher-query-container button');
+
+    const handleForce = () => setLayout('force');
+    const handleRadial = () => setLayout('radial');
+    const handleGroup = () => setIsAggregated(prev => !prev);
+    const handleReset = () => fetchInitialData();
+    
+    forceBtn?.addEventListener('click', handleForce);
+    radialBtn?.addEventListener('click', handleRadial);
+    groupBtn?.addEventListener('click', handleGroup);
+    resetBtn?.addEventListener('click', handleReset);
+    executeBtn?.addEventListener('click', handleExecuteQuery);
+
+    return () => {
+      forceBtn?.removeEventListener('click', handleForce);
+      radialBtn?.removeEventListener('click', handleRadial);
+      groupBtn?.removeEventListener('click', handleGroup);
+      resetBtn?.removeEventListener('click', handleReset);
+      executeBtn?.removeEventListener('click', handleExecuteQuery);
+    };
+  }, [fetchInitialData]); // Re-run if fetchInitialData changes
+
   return (
     <div className="graph-container" ref={containerRef} onClick={() => setContextMenu(null)}>
-      <div className="bottom-controls-container">
-        <div className="graph-controls">
-          <button onClick={() => setLayout('force')} disabled={layout === 'force'}>Force</button>
-          <button onClick={() => setLayout('radial')} disabled={layout === 'radial'}>Radial</button>
-          <button onClick={() => setIsAggregated(!isAggregated)}>
-            {isAggregated ? 'Ungroup' : 'Group by Label'}
-          </button>
-          <button onClick={fetchInitialData}>Reset View</button>
-        </div>
-        <div className="cypher-query-section">
-          <textarea
-            value={cypherQuery}
-            onChange={(e) => setCypherQuery(e.target.value)}
-            placeholder="Enter your Cypher query here..."
-            rows={3}
-          />
-          <button onClick={handleQuerySubmit}>Execute Query</button>
-        </div>
-      </div>
+      
       <svg ref={svgRef}></svg>
+
       {contextMenu && (
         <ContextMenu
           node={contextMenu.node}

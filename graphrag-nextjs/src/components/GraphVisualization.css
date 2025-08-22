@@ -1,20 +1,8 @@
 .graph-container {
   flex-grow: 1; /* Allows the container to fill available space */
-  height: 100vh;
   position: relative; /* Needed for positioning child elements like the sidebar */
   overflow: hidden; /* Hide anything that goes outside the boundaries */
-}
-
-.bottom-controls-container {
-  position: absolute;
-  bottom: 10%;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
+  width: 100%; /* Ensure it takes full width */
 }
 
 .graph-controls {
@@ -51,6 +39,7 @@
   height: 100%;
 }
 
+/* Styles for Nodes, Links, and Labels to ensure dark theme compatibility */
 .nodes circle {
   stroke: #fff;
   stroke-width: 1.5px;
@@ -65,8 +54,8 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-size: 12px;
   fill: #ececec;
-  pointer-events: none; /* Make text non-interactive */
-  text-shadow: 0 0 3px #000, 0 0 3px #000; /* Add a shadow to make text more readable */
+  pointer-events: none;
+  text-shadow: 0 0 3px #000, 0 0 3px #000;
 }
 
 .loading-message, .error-message {
@@ -181,4 +170,135 @@
 .cypher-query-section button:hover:not(:disabled) {
   background-color: #4a4b5a;
   border-color: #6a6b7a;
+}
+
+/* Remove the top-left container style */
+.top-controls-container {
+  display: none;
+}
+
+/* Styles for the main Cypher execution box */
+.cypher-query-container {
+  background-color: rgba(44, 48, 54, 0.9);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #363739;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  width: 550px; /* Give it a fixed width */
+}
+
+.cypher-query-container textarea {
+  width: 100%;
+  height: 60px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 8px;
+  font-family: monospace;
+  resize: vertical;
+}
+
+.cypher-query-container button {
+  padding: 8px 16px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.cypher-query-container button:hover {
+  background-color: #4a4b5a;
+}
+
+
+/* Styles for CypherGenerator Component */
+.cypher-generator {
+  background-color: rgba(44, 48, 54, 0.9);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #363739;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  width: 550px; /* Give it a fixed width */
+}
+
+.cypher-generator h4 {
+  margin-top: 0;
+  margin-bottom: 5px;
+}
+
+.cypher-generator p {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.cypher-generator .input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.cypher-generator input[type="text"] {
+  flex-grow: 1;
+  border: 1px solid #ccc;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.cypher-generator button {
+  padding: 8px 16px;
+  border: none;
+  background-color: #28a745;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.cypher-generator button:hover {
+  background-color: #218838;
+}
+
+.cypher-generator .error-message {
+  color: #ff6b6b;
+  margin-top: 10px;
+  font-size: 0.9em;
+}
+
+/* Remove absolute positioning from graph-controls as it's now in a flex container */
+.graph-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.graph-controls button {
+  background-color: #343541;
+  color: #ececec;
+  border: 1px solid #565869;
+  border-radius: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.graph-controls button:hover:not(:disabled) {
+  background-color: #4a4b5a;
+  border-color: #6a6b7a;
+}
+
+.graph-controls button:disabled {
+  background-color: #2a2b2e;
+  color: #8e8ea0;
+  cursor: not-allowed;
+  border-color: #3e3f4b;
+}
+
+/* Remove all absolute positioning for controls as they are now in the main flow */
+.bottom-controls-container, .top-controls-container {
+  display: none;
 }

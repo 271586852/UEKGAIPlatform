@@ -62,6 +62,7 @@ body {
 
 .main-content {
   display: flex;
+  flex-direction: column; /* Stack controls and graph vertically */
   flex-grow: 1;
   position: relative; /* Needed for sidebar positioning */
   overflow: hidden; /* Prevent scrollbars on the main container */
@@ -247,4 +248,163 @@ main {
 .delete-session-btn:hover {
   background-color: #343541;
   color: #ececec;
+}
+
+/* New styles for controls moved to page.tsx */
+.main-controls-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 0 20px 20px 20px; /* Add some padding */
+  background-color: #1a1a1a; /* Match the app background */
+  border-bottom: 1px solid #363739;
+}
+
+.cypher-and-generator {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.cypher-query-container, .cypher-generator {
+  flex: 1; /* Allow them to grow and share space */
+  min-width: 400px; /* Prevent them from becoming too small */
+}
+
+/* Styles for the main Cypher execution box */
+.cypher-query-container {
+  background-color: rgba(44, 48, 54, 0.9);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #363739;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.cypher-query-container textarea {
+  flex-grow: 1;
+  height: 80px;
+  border: 1px solid #555;
+  border-radius: 8px;
+  background-color: #2c3036;
+  color: white;
+  font-family: monospace;
+  font-size: 14px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.cypher-query-container textarea:focus {
+  border-color: #61dafb;
+}
+
+.cypher-query-container button {
+  padding: 10px 20px;
+  border: 1px solid #565869;
+  background-color: #343541;
+  color: #ececec;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-weight: bold;
+}
+
+.cypher-query-container button:hover {
+  background-color: #4a4b5a;
+}
+
+/* Styles for CypherGenerator Component */
+.cypher-generator {
+  background-color: rgba(44, 48, 54, 0.9);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #363739;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.cypher-generator h4 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  color: #ececec;
+}
+
+.cypher-generator p {
+  margin-top: 0;
+  margin-bottom: 12px;
+  font-size: 0.9em;
+  color: #aaa;
+}
+
+.cypher-generator .input-group {
+  display: flex;
+  gap: 10px;
+}
+
+.cypher-generator input[type="text"] {
+  flex-grow: 1;
+  border: 1px solid #555;
+  background-color: #2c3036;
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.cypher-generator input[type="text"]:focus {
+  border-color: #61dafb;
+}
+
+.cypher-generator button {
+  padding: 10px 20px;
+  border: 1px solid #565869;
+  background-color: #343541;
+  color: #ececec;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-weight: bold;
+}
+
+.cypher-generator button:hover {
+  background-color: #4a4b5a;
+}
+
+.cypher-generator .error-message {
+  color: #ff6b6b;
+  margin-top: 10px;
+  font-size: 0.9em;
+}
+
+.graph-controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center; /* Center the buttons */
+}
+
+.graph-controls button {
+  background-color: #343541;
+  color: #ececec;
+  border: 1px solid #565869;
+  border-radius: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.graph-controls button:hover:not(:disabled) {
+  background-color: #4a4b5a;
+  border-color: #6a6b7a;
+}
+
+.graph-controls button:disabled {
+  background-color: #2a2b2e;
+  color: #8e8ea0;
+  cursor: not-allowed;
+  border-color: #3e3f4b;
 }

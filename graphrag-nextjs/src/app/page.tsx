@@ -9,6 +9,7 @@ import GraphVisualization from '@/components/GraphVisualization';
 import Chatbot from '@/components/Chatbot';
 import Sidebar from '@/components/Sidebar';
 import ThinkingIndicator from '@/components/ThinkingIndicator';
+import CypherGenerator from '@/components/CypherGenerator';
 import { GraphData } from '@/types';
 import './globals.css';
 
@@ -24,6 +25,8 @@ const App = () => {
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cypherQuery, setCypherQuery] = useState('MATCH (n)-[r]->(m) RETURN n, r, m LIMIT 25');
+
 
   const [supabase] = useState(() => createPagesBrowserClient());
 
@@ -129,6 +132,26 @@ const App = () => {
           <h1>Unreal Engine Knowledge Graph</h1>
         </header>
         <main className="main-content">
+          <div className="main-controls-container">
+            <div className="cypher-and-generator">
+              <div className="cypher-query-container">
+                <textarea 
+                  value={cypherQuery}
+                  onChange={(e) => setCypherQuery(e.target.value)}
+                  placeholder="Enter Cypher query..."
+                />
+                <button>Execute</button> {/* This button's onClick will be handled by GraphVis */}
+              </div>
+              <CypherGenerator onGeneratedQuery={setCypherQuery} supabase={supabase} />
+            </div>
+            <div className="graph-controls">
+              {/* These buttons' onClick will be handled by GraphVis */}
+              <button>Force</button>
+              <button>Radial</button>
+              <button>Group by Label</button>
+              <button>Reset View</button>
+            </div>
+          </div>
           {error && <div className="error-message">Error: {error}</div>}
           {isLoading && <ThinkingIndicator />}
           <GraphVisualization 
@@ -139,6 +162,8 @@ const App = () => {
             fetchInitialData={() => fetchInitialData(supabase)}
             setIsLoading={setIsLoading}
             setError={setError}
+            cypherQuery={cypherQuery}
+            setCypherQuery={setCypherQuery}
           />
         </main>
       </div>
