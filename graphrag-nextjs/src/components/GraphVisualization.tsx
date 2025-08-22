@@ -42,6 +42,7 @@ export default function GraphVisualization({
 
   const [layout, setLayout] = useState<'force' | 'radial'>('force');
   const [isAggregated, setIsAggregated] = useState(false);
+  const [cypherQuery, setCypherQuery] = useState('MATCH (n)-[r]->(m) RETURN n, r, m LIMIT 25');
 
   // D3 rendering effect
   useEffect(() => {
@@ -127,7 +128,7 @@ export default function GraphVisualization({
     } else {
       simulation
         .force('r', null)
-        .force('center', d3.forceCenter(width / 2, height / 2));
+        .force('center', d3.forceCenter(width / 2, height * 0.4));
     }
 
     const link = g.append("g")
@@ -287,6 +288,31 @@ export default function GraphVisualization({
     }
   };
 
+  const handleQuerySubmit = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { data, error: funcError } = await supabase.functions.invoke('execute-cypher-query', {
+        body: { query: cypherQuery },
+      });
+
+      if (funcError) throw funcError;
+
+      if (data && data.nodes && data.links) {
+        setGraphData(data);
+      } else {
+        // Even if there are no results, we should clear the graph
+        setGraphData({ nodes: [], links: [] });
+        if (!data) throw new Error("Invalid data structure received from query.");
+      }
+    } catch (err: any) {
+      console.error("Failed to execute Cypher query:", err);
+      setError(`Query failed: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const drag = (simulation: d3.Simulation<SimulationNode, undefined>) => {
     function dragstarted(event: d3.D3DragEvent<Element, SimulationNode, SimulationNode>) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
@@ -318,13 +344,24 @@ export default function GraphVisualization({
 
   return (
     <div className="graph-container" ref={containerRef} onClick={() => setContextMenu(null)}>
-      <div className="graph-controls">
-        <button onClick={() => setLayout('force')} disabled={layout === 'force'}>Force</button>
-        <button onClick={() => setLayout('radial')} disabled={layout === 'radial'}>Radial</button>
-        <button onClick={() => setIsAggregated(!isAggregated)}>
-          {isAggregated ? 'Ungroup' : 'Group by Label'}
-        </button>
-        <button onClick={fetchInitialData}>Reset View</button>
+      <div className="bottom-controls-container">
+        <div className="graph-controls">
+          <button onClick={() => setLayout('force')} disabled={layout === 'force'}>Force</button>
+          <button onClick={() => setLayout('radial')} disabled={layout === 'radial'}>Radial</button>
+          <button onClick={() => setIsAggregated(!isAggregated)}>
+            {isAggregated ? 'Ungroup' : 'Group by Label'}
+          </button>
+          <button onClick={fetchInitialData}>Reset View</button>
+        </div>
+        <div className="cypher-query-section">
+          <textarea
+            value={cypherQuery}
+            onChange={(e) => setCypherQuery(e.target.value)}
+            placeholder="Enter your Cypher query here..."
+            rows={3}
+          />
+          <button onClick={handleQuerySubmit}>Execute Query</button>
+        </div>
       </div>
       <svg ref={svgRef}></svg>
       {contextMenu && (

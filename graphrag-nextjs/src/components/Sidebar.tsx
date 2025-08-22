@@ -18,10 +18,10 @@ export default function Sidebar({
   activeSessionId,
   setActiveSessionId,
   chatListVersion,
-  onDeleteSession, // Add this
+  onDeleteSession,
 }: SidebarProps) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setSidebarError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -40,7 +40,7 @@ export default function Sidebar({
         }
       } catch (err: any) {
         console.error("Failed to fetch chat sessions:", err);
-        setError(`Failed to load sessions: ${err.message}`);
+        setSidebarError(`Failed to load sessions: ${err.message}`);
       }
     };
 
