@@ -127,54 +127,58 @@ const App = () => {
         chatListVersion={chatListVersion}
         onDeleteSession={handleDeleteSession} // Pass the handler to Sidebar
       />
-      <div className="app-main-content">
+      <div className="content-wrapper">
         <header className="App-header">
           <h1>Unreal Engine Knowledge Graph</h1>
         </header>
-        <main className="main-content">
-          <div className="graph-controls">
-            {/* These buttons' onClick will be handled by GraphVis */}
-            <button>Force</button>
-            <button>Radial</button>
-            <button>Group by Label</button>
-            <button>Reset View</button>
-          </div>
-          {error && <div className="error-message">Error: {error}</div>}
-          {isLoading && (
-            <div className="loading-overlay">
-              <ThinkingIndicator />
-            </div>
-          )}
-          <GraphVisualization 
-            supabase={supabase}
-            graphData={graphData}
-            setGraphData={setGraphData}
-            activeSessionId={activeSessionId}
-            fetchInitialData={() => fetchInitialData(supabase)}
-            setIsLoading={setIsLoading}
-            setError={setError}
-            cypherQuery={cypherQuery}
-            setCypherQuery={setCypherQuery}
-          />
-          <div className="cypher-and-generator">
-            <div className="cypher-query-container">
-              <textarea 
-                value={cypherQuery}
-                onChange={(e) => setCypherQuery(e.target.value)}
-                placeholder="Enter Cypher query..."
+        <div className="main-body">
+          <div className="app-main-content">
+            <main className="main-content">
+              <div className="graph-controls">
+                {/* These buttons' onClick will be handled by GraphVis */}
+                <button>Force</button>
+                <button>Radial</button>
+                <button>Group by Label</button>
+                <button>Reset View</button>
+              </div>
+              {error && <div className="error-message">Error: {error}</div>}
+              {isLoading && (
+                <div className="loading-overlay">
+                  <ThinkingIndicator />
+                </div>
+              )}
+              <GraphVisualization 
+                supabase={supabase}
+                graphData={graphData}
+                setGraphData={setGraphData}
+                activeSessionId={activeSessionId}
+                fetchInitialData={() => fetchInitialData(supabase)}
+                setIsLoading={setIsLoading}
+                setError={setError}
+                cypherQuery={cypherQuery}
+                setCypherQuery={setCypherQuery}
               />
-              <button>Execute</button> {/* This button's onClick will be handled by GraphVis */}
-            </div>
-            <CypherGenerator onGeneratedQuery={setCypherQuery} supabase={supabase} />
+              <div className="cypher-and-generator">
+                <div className="cypher-query-container">
+                  <textarea 
+                    value={cypherQuery}
+                    onChange={(e) => setCypherQuery(e.target.value)}
+                    placeholder="Enter Cypher query..."
+                  />
+                  <button>Execute</button> {/* This button's onClick will be handled by GraphVis */}
+                </div>
+                <CypherGenerator onGeneratedQuery={setCypherQuery} supabase={supabase} />
+              </div>
+            </main>
           </div>
-        </main>
+          <Chatbot 
+            supabase={supabase} 
+            setGraphData={setGraphData} 
+            activeSessionId={activeSessionId}
+            onNewSession={handleNewSession}
+          />
+        </div>
       </div>
-      <Chatbot 
-        supabase={supabase} 
-        setGraphData={setGraphData} 
-        activeSessionId={activeSessionId}
-        onNewSession={handleNewSession}
-      />
     </div>
   );
 }

@@ -53,7 +53,7 @@ export default function Chatbot({ supabase, setGraphData, activeSessionId, onNew
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages.length]); // Change dependency to message count
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
