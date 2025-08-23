@@ -140,7 +140,11 @@ const App = () => {
             <button>Reset View</button>
           </div>
           {error && <div className="error-message">Error: {error}</div>}
-          {isLoading && <ThinkingIndicator />}
+          {isLoading && (
+            <div className="loading-overlay">
+              <ThinkingIndicator />
+            </div>
+          )}
           <GraphVisualization 
             supabase={supabase}
             graphData={graphData}
