@@ -42,12 +42,10 @@ export default function CypherGenerator({ onGeneratedQuery, supabase }: CypherGe
 
   return (
     <div className="cypher-generator">
-      <h4>Natural Language to Cypher</h4>
-      <p>输入你的问题，Agent 将会为你生成相应的 Cypher 查询语句。</p>
       <div className="input-group">
         <input
           type="text"
-          placeholder="例如: '查找所有关于图神经网络的论文'"
+          placeholder="自然语言查询 例如: '查找所有关于图神经网络的论文'"
           value={naturalLanguageInput}
           onChange={(e) => setNaturalLanguageInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}

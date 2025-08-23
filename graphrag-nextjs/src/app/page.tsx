@@ -132,25 +132,12 @@ const App = () => {
           <h1>Unreal Engine Knowledge Graph</h1>
         </header>
         <main className="main-content">
-          <div className="main-controls-container">
-            <div className="cypher-and-generator">
-              <div className="cypher-query-container">
-                <textarea 
-                  value={cypherQuery}
-                  onChange={(e) => setCypherQuery(e.target.value)}
-                  placeholder="Enter Cypher query..."
-                />
-                <button>Execute</button> {/* This button's onClick will be handled by GraphVis */}
-              </div>
-              <CypherGenerator onGeneratedQuery={setCypherQuery} supabase={supabase} />
-            </div>
-            <div className="graph-controls">
-              {/* These buttons' onClick will be handled by GraphVis */}
-              <button>Force</button>
-              <button>Radial</button>
-              <button>Group by Label</button>
-              <button>Reset View</button>
-            </div>
+          <div className="graph-controls">
+            {/* These buttons' onClick will be handled by GraphVis */}
+            <button>Force</button>
+            <button>Radial</button>
+            <button>Group by Label</button>
+            <button>Reset View</button>
           </div>
           {error && <div className="error-message">Error: {error}</div>}
           {isLoading && <ThinkingIndicator />}
@@ -165,6 +152,17 @@ const App = () => {
             cypherQuery={cypherQuery}
             setCypherQuery={setCypherQuery}
           />
+          <div className="cypher-and-generator">
+            <div className="cypher-query-container">
+              <textarea 
+                value={cypherQuery}
+                onChange={(e) => setCypherQuery(e.target.value)}
+                placeholder="Enter Cypher query..."
+              />
+              <button>Execute</button> {/* This button's onClick will be handled by GraphVis */}
+            </div>
+            <CypherGenerator onGeneratedQuery={setCypherQuery} supabase={supabase} />
+          </div>
         </main>
       </div>
       <Chatbot 

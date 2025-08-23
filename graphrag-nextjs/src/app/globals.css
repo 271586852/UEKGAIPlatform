@@ -261,6 +261,14 @@ main {
 }
 
 .cypher-and-generator {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: 90%;
+  max-width: 1200px;
+
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
@@ -274,7 +282,7 @@ main {
 /* Styles for the main Cypher execution box */
 .cypher-query-container {
   background-color: rgba(44, 48, 54, 0.9);
-  padding: 15px;
+  padding: 10px;
   border-radius: 8px;
   border: 1px solid #363739;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -285,7 +293,7 @@ main {
 
 .cypher-query-container textarea {
   flex-grow: 1;
-  height: 80px;
+  height: 20px;
   border: 1px solid #555;
   border-radius: 8px;
   background-color: #2c3036;
@@ -319,7 +327,7 @@ main {
 /* Styles for CypherGenerator Component */
 .cypher-generator {
   background-color: rgba(44, 48, 54, 0.9);
-  padding: 15px;
+  padding: 10px;
   border-radius: 8px;
   border: 1px solid #363739;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -384,6 +392,8 @@ main {
   display: flex;
   gap: 10px;
   justify-content: center; /* Center the buttons */
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 
 .graph-controls button {
