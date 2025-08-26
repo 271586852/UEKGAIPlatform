@@ -83,13 +83,13 @@ serve(async (req) => {
       throw new Error("Question is required.");
     }
     
-    // Instantiate the OpenAI model but configure it to use Moonshot's API
+    // Instantiate the OpenAI model but configure it to use Tongyi Qianwen's API
     const llm = new ChatOpenAI({ 
       openAIApiKey: Deno.env.get("OPENAI_API_KEY"), // Using the same key as rag-query
-      modelName: "moonshot-v1-8k", 
+      modelName: "qwen-plus", 
       temperature: 0,
       configuration: {
-        baseURL: "https://api.moonshot.cn/v1",
+        baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1",
       },
     });
     

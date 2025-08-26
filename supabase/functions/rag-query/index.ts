@@ -135,18 +135,18 @@ serve(async (req) => {
     if (!openaiApiKey) {
       throw new Error("Missing environment variable OPENAI_API_KEY")
     }
-    const kimi = new OpenAI({
+    const qwen = new OpenAI({
       apiKey: openaiApiKey,
-      baseURL: "https://api.moonshot.cn/v1",
+      baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1",
     })
 
     // Get relevant documents using semantic search
     let documents;
     try {
       // Generate embedding for user query
-      const embeddingResponse = await kimi.embeddings.create({
+      const embeddingResponse = await qwen.embeddings.create({
         input: query,
-        model: "text-embedding-3-small"
+        model: "text-embedding-v2"
       });
       const queryEmbedding = embeddingResponse.data[0].embedding;
 
@@ -197,8 +197,8 @@ serve(async (req) => {
     const prompt = getPrompt(query, context)
 
     // Call Kimi API with streaming enabled
-    const llmStream = await kimi.chat.completions.create({
-      model: "moonshot-v1-8k",
+    const llmStream = await qwen.chat.completions.create({
+      model: "qwen-plus",
       messages: [
         { role: "system", content: "You are a helpful and concise assistant." },
         { role: "user", content: prompt },
