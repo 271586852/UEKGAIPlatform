@@ -154,8 +154,8 @@ serve(async (req) => {
       const { data: searchResults, error: searchError } = await supabaseClient
         .rpc('match_documents', {
           query_embedding: queryEmbedding,
-          match_threshold: 0.7,
-          match_count: 8
+          match_threshold: 0.5,
+          match_count: 15
         });
 
       if (searchError) {
@@ -196,7 +196,10 @@ serve(async (req) => {
 
     const prompt = getPrompt(query, context)
 
-    // Call Kimi API with streaming enabled
+    // Log the full prompt to the console for debugging
+    console.log("--- Full Prompt Sent to LLM ---\n", prompt)
+
+    // Call Qwen API with streaming enabled
     const llmStream = await qwen.chat.completions.create({
       model: "qwen-plus",
       messages: [

@@ -10,7 +10,7 @@ create table
   );
 
 -- Create a function to search for documents
-create function match_documents (
+create or replace function match_documents (
   query_embedding vector(1536),
   match_threshold float,
   match_count int
@@ -25,8 +25,8 @@ as $$
 begin
   return query
   select
-    id,
-    content,
+    ue_documents.id,
+    ue_documents.content,
     1 - (ue_documents.embedding <=> query_embedding) as similarity
   from
     ue_documents
