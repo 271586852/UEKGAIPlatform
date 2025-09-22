@@ -5,12 +5,14 @@ import { createPagesBrowserClient } from '@supabase/auth-helpers-nextjs';
 import { Session, SupabaseClient } from '@supabase/supabase-js';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
-import GraphVisualization from '@/components/GraphVisualization';
+import SVGGraphVisualization from '@/components/SVGGraphVisualization';
+import ThreeGraphVisualization from '@/components/ThreeGraphVisualization';
 import Chatbot from '@/components/Chatbot';
 import Sidebar from '@/components/Sidebar';
 import ThinkingIndicator from '@/components/ThinkingIndicator';
 import CypherGenerator from '@/components/CypherGenerator';
-import { GraphData } from '@/types';
+import { GraphData, GraphNode } from '@/types';
+import ContextMenu from '@/components/ContextMenu'; // Import ContextMenu
 import './globals.css';
 
 import '@/components/GraphVisualization.css';
@@ -26,6 +28,11 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cypherQuery, setCypherQuery] = useState('MATCH (n)-[r]->(m) RETURN n, r, m LIMIT 25');
+
+  // New states for view mode and lifted-up interactions
+  const [viewMode, setViewMode] = useState<'2d' | '3d'>('2d');
+  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ node: GraphNode; x: number; y: number } | null>(null);
 
 
   const [supabase] = useState(() => createPagesBrowserClient());
@@ -48,6 +55,28 @@ const App = () => {
       setIsLoading(false);
     }
   }, []);
+
+  // Lifted handleTrace function
+  const handleTrace = async (direction: 'UPSTREAM' | 'DOWNSTREAM') => {
+    if (!contextMenu) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('trace-graph', {
+        body: { nodeId: contextMenu.node.id, direction },
+      });
+      if (error) throw error;
+      if (data && data.nodes && data.links) {
+        setGraphData(data);
+      }
+    } catch (err: unknown) {
+      console.error('Failed to trace graph:', err);
+      setError(`Failed to trace graph: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
+      setContextMenu(null);
+    }
+  };
 
   useEffect(() => {
     const getSessionAndData = async () => {
@@ -132,7 +161,7 @@ const App = () => {
           <h1>Unreal Engine Knowledge Graph</h1>
         </header>
         <div className="main-body">
-          <div className="app-main-content">
+          <div className="app-main-content" onClick={() => setContextMenu(null)}>
             <main className="main-content">
               <div className="graph-controls">
                 {/* These buttons' onClick will be handled by GraphVis */}
@@ -140,6 +169,9 @@ const App = () => {
                 <button>Radial</button>
                 <button>Group by Label</button>
                 <button>Reset View</button>
+                <button onClick={() => setViewMode(prev => prev === '2d' ? '3d' : '2d')}>
+                  Switch to {viewMode === '2d' ? '3D' : '2D'}
+                </button>
               </div>
               {error && <div className="error-message">Error: {error}</div>}
               {isLoading && (
@@ -147,17 +179,50 @@ const App = () => {
                   <ThinkingIndicator />
                 </div>
               )}
-              <GraphVisualization 
-                supabase={supabase}
-                graphData={graphData}
-                setGraphData={setGraphData}
-                activeSessionId={activeSessionId}
-                fetchInitialData={() => fetchInitialData(supabase)}
-                setIsLoading={setIsLoading}
-                setError={setError}
-                cypherQuery={cypherQuery}
-                setCypherQuery={setCypherQuery}
-              />
+              <div className="graph-visualization-container">
+                {viewMode === '2d' ? (
+                  <SVGGraphVisualization 
+                    supabase={supabase}
+                    graphData={graphData}
+                    setGraphData={setGraphData}
+                    activeSessionId={activeSessionId}
+                    fetchInitialData={() => fetchInitialData(supabase)}
+                    setIsLoading={setIsLoading}
+                    setError={setError}
+                    cypherQuery={cypherQuery}
+                    setCypherQuery={setCypherQuery}
+                    setSelectedNode={setSelectedNode}
+                    setContextMenu={setContextMenu}
+                  />
+                ) : (
+                  <ThreeGraphVisualization
+                    graphData={graphData}
+                    setSelectedNode={setSelectedNode}
+                    setContextMenu={setContextMenu}
+                  />
+                )}
+                {contextMenu && (
+                  <ContextMenu
+                    node={contextMenu.node}
+                    x={contextMenu.x}
+                    y={contextMenu.y}
+                    onClose={() => setContextMenu(null)}
+                    onTrace={handleTrace}
+                  />
+                )}
+                {selectedNode && (
+                  <div className={`sidebar ${selectedNode ? '' : 'hidden'}`}>
+                    <button onClick={() => setSelectedNode(null)} className="close-btn">×</button>
+                    <h2>Node Details</h2>
+                    <div className="node-info">
+                      <p><strong>ID:</strong> {selectedNode.id}</p>
+                      <p><strong>Label:</strong> {selectedNode.label}</p>
+                      <p><strong>Type:</strong> {selectedNode.type || 'N/A'}</p>
+                      <p><strong>Description:</strong> {selectedNode.description || 'No description available.'}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="cypher-and-generator">
                 <div className="cypher-query-container">
                   <textarea 

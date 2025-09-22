@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "d3-force-3d": "^3.0.6",
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.180.0"
+  }
+}

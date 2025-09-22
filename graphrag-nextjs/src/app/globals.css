@@ -83,6 +83,14 @@ body {
   padding: 0px; /* Add padding to create space around the content */
 }
 
+.graph-visualization-container {
+  flex-grow: 1;
+  position: relative; /* For context menus and other overlays */
+  overflow: hidden; /* Ensure graph visualization does not overflow */
+  width: 100%;
+  height: 100%; /* Ensure it fills the flex item space */
+}
+
 main {
   flex-grow: 1;
   /* padding: 20px; */ /* a little too much padding */
